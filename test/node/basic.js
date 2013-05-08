@@ -4,7 +4,8 @@ var EventEmitter = require('events').EventEmitter
   , express = require('express')
   , assert = require('better-assert')
   , app = express()
-  , url = require('url');
+  , url = require('url')
+  , http = require('http');
 
 app.get('/login', function(req, res){
   res.send('<form id="login"></form>');
@@ -52,6 +53,10 @@ app.get('/custom', function(req, res){
 
 app.get('/error', function(req, res){
   res.send(500, 'boom');
+});
+
+app.get('/customagent', function( req, res){
+    res.send(200);
 });
 
 app.listen(5000);
@@ -313,6 +318,24 @@ describe('request', function(){
       })
     })
   })
+
+  describe('.setAgent', function(){
+      it( 'should set custom agent', function(done) {
+          var agent = new http.Agent;
+          agent.maxSockets = 2;
+          agent.custom = 'customagent';
+          var r = request
+          .get('http://localhost:5000/customagent')
+          .setAgent( agent )
+          .end( function(err, res){
+              assert( null == err );
+              r.req.agent.maxSockets.should.equal( 2 );
+              r.req.agent.custom.should.equal('customagent');
+              done();
+          });
+      });
+  });
+
 
   describe('.end(fn)', function(){
     it('should check arity', function(done){
